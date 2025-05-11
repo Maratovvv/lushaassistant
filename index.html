@@ -1,0 +1,57 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lusha — Голосовой помощник</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" href="/static/logo1.png">
+</head>
+<body>
+    <div class="container">
+        <img src="/static/logo1.png" alt="Lusha logo" class="logo">
+        <h1>Lusha</h1>
+        <p>Спроси что-нибудь у Lusha 👇</p>
+        <input type="text" id="inputText" placeholder="Например: погода в Бишкеке" />
+        <button onclick="sendQuestion()">Спросить</button>
+        <button onclick="startListening()">🎤 Говорить</button>
+        <div id="response"></div>
+    </div>
+
+    <script>
+        function sendQuestion() {
+            const input = document.getElementById('inputText').value;
+            fetch('/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question: input })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('response').innerText = data.answer;
+                speak(data.answer);
+            });
+        }
+
+        function startListening() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'ru-RU';
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                const text = event.results[0][0].transcript;
+                document.getElementById('inputText').value = text;
+                sendQuestion();
+            };
+        }
+
+        function speak(text) {
+            const synth = window.speechSynthesis;
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ru-RU';
+            synth.speak(utterance);
+        }
+    </script>
+</body>
+</html>
